@@ -3,6 +3,7 @@ import path from "node:path";
 
 const config: NextConfig = {
   allowedDevOrigins: ["127.0.0.1"],
+  devIndicators: false,
   output: "standalone",
   outputFileTracingRoot: path.join(import.meta.dirname, ".."),
   poweredByHeader: false,

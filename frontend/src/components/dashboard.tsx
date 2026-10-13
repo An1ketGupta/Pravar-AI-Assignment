@@ -65,7 +65,7 @@ export function Dashboard() {
         <div className="header-inner">
           <Brand />
           <div className="header-actions">
-            <Button onClick={() => setAdding(true)}>
+            <Button id="add-lead-button" onClick={() => setAdding(true)}>
               <Plus size={17} />
               <span>Add new lead</span>
             </Button>

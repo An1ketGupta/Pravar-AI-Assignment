@@ -1,7 +1,7 @@
 "use client";
 
 import { Loader2, Plus } from "lucide-react";
-import { useState, type FormEvent } from "react";
+import { useRef, useState, type FormEvent } from "react";
 import { toast } from "sonner";
 import { useLeadMutations } from "@/hooks/use-leads";
 import { Button } from "./ui/button";
@@ -23,6 +23,7 @@ export function AddLeadDialog({
 }) {
   const { create } = useLeadMutations();
   const [error, setError] = useState("");
+  const nameInput = useRef<HTMLInputElement>(null);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -58,7 +59,13 @@ export function AddLeadDialog({
         }
       }}
     >
-      <DialogContent className="add-lead-dialog">
+      <DialogContent
+        className="add-lead-dialog"
+        onOpenAutoFocus={(event) => {
+          event.preventDefault();
+          nameInput.current?.focus();
+        }}
+      >
         <DialogHeader>
           <DialogTitle>Add new lead</DialogTitle>
           <DialogDescription>
@@ -71,6 +78,7 @@ export function AddLeadDialog({
               Full name <span className="required-mark">*</span>
             </label>
             <input
+              ref={nameInput}
               id="lead-name"
               name="name"
               placeholder="e.g., Sarah Connor"

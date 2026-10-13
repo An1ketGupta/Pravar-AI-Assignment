@@ -53,7 +53,7 @@ test("complete CRM flow, immediate updates, filters, persistence and mobile layo
   await expect(page.getByRole("dialog")).toBeVisible();
   await page.screenshot({
     path: path.join(screenshots, "03-add-lead.png"),
-    fullPage: true,
+    fullPage: false,
   });
   await page.getByRole("textbox", { name: "Full name" }).fill("Jordan Ellis");
   await page.getByRole("textbox", { name: "Company" }).fill("Atlas Partners");
@@ -75,7 +75,7 @@ test("complete CRM flow, immediate updates, filters, persistence and mobile layo
   );
   await page.screenshot({
     path: path.join(screenshots, "04-timeline.png"),
-    fullPage: true,
+    fullPage: false,
   });
   await dialog.getByLabel("Status", { exact: true }).selectOption("qualified");
   await expect(dialog.getByLabel("Status", { exact: true })).toHaveValue(
@@ -141,9 +141,55 @@ test("complete CRM flow, immediate updates, filters, persistence and mobile layo
   await expect(dialog.getByRole("button", { name: "Save note" })).toBeVisible();
   await page.screenshot({
     path: path.join(screenshots, "06-mobile-timeline.png"),
-    fullPage: true,
+    fullPage: false,
   });
   await page.keyboard.press("Escape");
   await expect(page.getByRole("dialog")).toHaveCount(0);
   expect(errors).toEqual([]);
+});
+
+test("keyboard focus returns to the opener and failed saves preserve the draft", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await page.getByRole("button", { name: "Open local preview" }).click();
+  const addButton = page.getByRole("button", {
+    name: "Add new lead",
+    exact: true,
+  });
+  await addButton.focus();
+  await page.keyboard.press("Enter");
+  await expect(page.getByRole("textbox", { name: "Full name" })).toBeFocused();
+  await page.keyboard.press("Escape");
+  await expect(addButton).toBeFocused();
+
+  const lead = page.getByRole("button", { name: "Open Hank Scorpio" });
+  await lead.focus();
+  await page.keyboard.press("Enter");
+  const dialog = page.getByRole("dialog");
+  await expect(dialog.locator(".timeline-entry")).toHaveCount(2);
+  const draft = dialog.getByRole("textbox", {
+    name: "Keep the conversation going",
+  });
+  await draft.fill("This draft must survive a failed save.");
+  await page.route("**/api/leads/*/discussions", (route) =>
+    route.fulfill({
+      status: 503,
+      contentType: "application/json",
+      body: JSON.stringify({
+        detail: "Unable to save or load data right now. Please try again.",
+      }),
+    }),
+  );
+  await dialog.getByRole("button", { name: "Save note" }).click();
+  await expect(dialog.getByRole("alert")).toContainText(
+    "Unable to save or load data",
+  );
+  await expect(draft).toHaveValue("This draft must survive a failed save.");
+  await expect(dialog.locator(".timeline-entry")).toHaveCount(2);
+  await page.keyboard.press("Escape");
+  await expect(lead).toBeFocused();
+  await expect(lead).not.toContainText(
+    "This draft must survive a failed save.",
+  );
 });

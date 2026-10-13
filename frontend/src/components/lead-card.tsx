@@ -19,6 +19,7 @@ export function LeadCard({
   const terminal = !isActive(lead);
   return (
     <button
+      id={`lead-${lead.id}`}
       type="button"
       className={cn(
         "lead-card",
