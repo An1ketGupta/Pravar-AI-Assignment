@@ -116,6 +116,12 @@ Copy the **root** `.env.example` to `.env`, then:
 docker compose up --build
 ```
 
+To try the preview directly without copying configuration files:
+
+```bash
+docker compose --env-file .env.example up --build
+```
+
 Open **http://localhost:3000**. The default template enables the local preview
 with a real PostgreSQL database in Docker. PostgreSQL uses a named volume and
 has no exposed host port. The API applies migrations before starting.
@@ -170,7 +176,20 @@ Browser tests start isolated servers on ports **3100** and **8100**, reset only
 `backend/.local/e2e.db`, and exercise the complete CRM flow, immediate list updates,
 search/filter behavior, reload persistence, reminder completion, and mobile layouts.
 They also generate screenshots in `docs/screenshots/`. API tests cover ownership
-isolation, JWT validation, seed idempotency, UTC normalization, and validation errors.
+isolation, JWT validation, seed idempotency, UTC normalization, validation errors,
+and rollback after a failed transaction. Browser checks also cover keyboard focus
+and preserving a draft when a save fails.
+
+To exercise a freshly initialized Docker preview instead of starting test servers:
+
+```powershell
+$env:LEADFLOW_E2E_BASE_URL = "http://localhost:3000"
+npm run test:e2e
+Remove-Item Env:LEADFLOW_E2E_BASE_URL
+```
+
+The complete-flow test expects the six initial sample leads and changes its test
+workspace. Use the isolated default test servers for repeatable checks.
 
 GitHub Actions also runs the migrations and an integration check against real
 PostgreSQL. To run that check manually on a **disposable** PostgreSQL database,
@@ -242,7 +261,8 @@ Follow [the deployment guide](docs/deployment.md) for Supabase, Render, and Verc
 is `frontend/`; its configuration builds from the workspace root.
 
 Screenshots are in [docs/screenshots](docs/screenshots). A short recording script
-is in [docs/walkthrough.md](docs/walkthrough.md).
+is in [docs/walkthrough.md](docs/walkthrough.md). Completed local checks and their
+limits are recorded in [docs/verification.md](docs/verification.md).
 
 This checkout uses meaningful local commits. Push the completed history when ready:
 

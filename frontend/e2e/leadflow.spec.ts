@@ -16,6 +16,7 @@ test("complete CRM flow, immediate updates, filters, persistence and mobile layo
   ).toBeVisible();
   await page.screenshot({
     path: path.join(screenshots, "01-sign-in.png"),
+    animations: "disabled",
     fullPage: true,
   });
   await page
@@ -35,6 +36,7 @@ test("complete CRM flow, immediate updates, filters, persistence and mobile layo
   ).toContainText("Overdue");
   await page.screenshot({
     path: path.join(screenshots, "02-dashboard.png"),
+    animations: "disabled",
     fullPage: true,
   });
 
@@ -53,6 +55,7 @@ test("complete CRM flow, immediate updates, filters, persistence and mobile layo
   await expect(page.getByRole("dialog")).toBeVisible();
   await page.screenshot({
     path: path.join(screenshots, "03-add-lead.png"),
+    animations: "disabled",
     fullPage: false,
   });
   await page.getByRole("textbox", { name: "Full name" }).fill("Jordan Ellis");
@@ -75,6 +78,7 @@ test("complete CRM flow, immediate updates, filters, persistence and mobile layo
   );
   await page.screenshot({
     path: path.join(screenshots, "04-timeline.png"),
+    animations: "disabled",
     fullPage: false,
   });
   await dialog.getByLabel("Status", { exact: true }).selectOption("qualified");
@@ -131,6 +135,7 @@ test("complete CRM flow, immediate updates, filters, persistence and mobile layo
   ).toBe(true);
   await page.screenshot({
     path: path.join(screenshots, "05-mobile.png"),
+    animations: "disabled",
     fullPage: true,
   });
   await page.getByRole("button", { name: "Open Jordan Ellis" }).click();
@@ -141,6 +146,7 @@ test("complete CRM flow, immediate updates, filters, persistence and mobile layo
   await expect(dialog.getByRole("button", { name: "Save note" })).toBeVisible();
   await page.screenshot({
     path: path.join(screenshots, "06-mobile-timeline.png"),
+    animations: "disabled",
     fullPage: false,
   });
   await page.keyboard.press("Escape");

@@ -16,6 +16,10 @@ is scoped to the verified user's ID. New users receive their own sample records.
 Commits reflect completed milestones and fixes. No credentials, user records,
 or generated dependency directories belong in Git.
 
+The final handoff is local, as requested: retain the commit history for the
+applicant to push. Provider configuration and live deployment are left to the
+applicant using the deployment guide; they are not reported as verified.
+
 ## Behavioral decisions
 
 - Persist timestamps in UTC; interpret today's follow-ups in the browser timezone.
