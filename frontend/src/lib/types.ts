@@ -1,4 +1,11 @@
-export const STATUSES = ["new", "contacted", "qualified", "proposal_sent", "won", "lost"] as const;
+export const STATUSES = [
+  "new",
+  "contacted",
+  "qualified",
+  "proposal_sent",
+  "won",
+  "lost",
+] as const;
 export type LeadStatus = (typeof STATUSES)[number];
 
 export const STATUS_LABELS: Record<LeadStatus, string> = {

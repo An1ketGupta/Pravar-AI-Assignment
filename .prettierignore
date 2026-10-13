@@ -1,0 +1,6 @@
+node_modules
+.next
+backend
+package-lock.json
+docs/screenshots
+frontend/test-results

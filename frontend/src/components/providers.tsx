@@ -1,8 +1,18 @@
 "use client";
 
-import { QueryClient, QueryClientProvider, useQueryClient } from "@tanstack/react-query";
+import {
+  QueryClient,
+  QueryClientProvider,
+  useQueryClient,
+} from "@tanstack/react-query";
 import type { Session } from "@supabase/supabase-js";
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  type ReactNode,
+} from "react";
 import { Toaster } from "sonner";
 import { demoEnabled, getSupabase } from "@/lib/supabase";
 
@@ -27,20 +37,40 @@ function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let alive = true;
-    if (demoEnabled && sessionStorage.getItem("leadflow-local-preview") === "true") setDemo(true);
+    if (
+      demoEnabled &&
+      sessionStorage.getItem("leadflow-local-preview") === "true"
+    )
+      setDemo(true);
     const supabase = getSupabase();
     if (!supabase) {
       setLoading(false);
       return;
     }
-    supabase.auth.getSession().then(({ data }) => {
-      if (alive) { setSession(data.session); setLoading(false); }
-    }).catch(() => { if (alive) setLoading(false); });
+    supabase.auth
+      .getSession()
+      .then(({ data }) => {
+        if (alive) {
+          setSession(data.session);
+          setLoading(false);
+        }
+      })
+      .catch(() => {
+        if (alive) setLoading(false);
+      });
     // Keep this callback synchronous; awaiting auth calls here can deadlock Supabase.
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, nextSession) => {
-      if (alive) { setSession(nextSession); setLoading(false); }
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+      if (alive) {
+        setSession(nextSession);
+        setLoading(false);
+      }
     });
-    return () => { alive = false; subscription.unsubscribe(); };
+    return () => {
+      alive = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   function startDemo() {
@@ -61,13 +91,26 @@ function AuthProvider({ children }: { children: ReactNode }) {
     setSession(null);
   }
 
-  return <AuthContext.Provider value={{
-    session, loading, demo,
-    token: demo ? "local-demo" : session?.access_token ?? null,
-    userId: demo ? "local-demo" : session?.user.id ?? null,
-    name: demo ? "Alex Morgan" : session?.user.user_metadata?.full_name || session?.user.email?.split("@")[0] || "Your workspace",
-    startDemo, signOut,
-  }}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider
+      value={{
+        session,
+        loading,
+        demo,
+        token: demo ? "local-demo" : (session?.access_token ?? null),
+        userId: demo ? "local-demo" : (session?.user.id ?? null),
+        name: demo
+          ? "Alex Morgan"
+          : session?.user.user_metadata?.full_name ||
+            session?.user.email?.split("@")[0] ||
+            "Your workspace",
+        startDemo,
+        signOut,
+      }}
+    >
+      {children}
+    </AuthContext.Provider>
+  );
 }
 
 export function useAuth() {
@@ -77,11 +120,19 @@ export function useAuth() {
 }
 
 export function Providers({ children }: { children: ReactNode }) {
-  const [queryClient] = useState(() => new QueryClient({
-    defaultOptions: { queries: { staleTime: 30_000, retry: 1 }, mutations: { retry: false } },
-  }));
-  return <QueryClientProvider client={queryClient}>
-    <AuthProvider>{children}</AuthProvider>
-    <Toaster position="bottom-right" richColors closeButton />
-  </QueryClientProvider>;
+  const [queryClient] = useState(
+    () =>
+      new QueryClient({
+        defaultOptions: {
+          queries: { staleTime: 30_000, retry: 1 },
+          mutations: { retry: false },
+        },
+      }),
+  );
+  return (
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>{children}</AuthProvider>
+      <Toaster position="bottom-right" richColors closeButton />
+    </QueryClientProvider>
+  );
 }
