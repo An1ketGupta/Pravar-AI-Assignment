@@ -1,3 +1,6 @@
+import os
+import subprocess
+import sys
 from uuid import uuid4
 
 from sqlalchemy.exc import OperationalError
@@ -160,3 +163,22 @@ def test_failed_commit_rolls_back_both_note_and_follow_up(client, monkeypatch):
     after = client.get(f"/api/leads/{lead_id}").json()
     assert after["follow_up_at"] == before["follow_up_at"]
     assert after["discussions"] == before["discussions"]
+
+
+def test_browser_timezone_aliases_work_without_system_timezone_files():
+    # Slim containers may omit backward-compatible aliases emitted by browsers.
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-c",
+            "from zoneinfo import ZoneInfo; "
+            "from app.schemas import BootstrapInput; "
+            "BootstrapInput(timezone='Asia/Calcutta'); "
+            "ZoneInfo('US/Eastern'); ZoneInfo('Europe/Kiev')",
+        ],
+        env={**os.environ, "PYTHONTZPATH": ""},
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert result.returncode == 0, result.stderr
