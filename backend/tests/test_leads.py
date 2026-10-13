@@ -1,5 +1,8 @@
 from uuid import uuid4
 
+from sqlalchemy.exc import OperationalError
+from sqlmodel import Session
+
 
 def bootstrap(client, headers=None):
     response = client.post(
@@ -130,3 +133,30 @@ def test_search_treats_wildcards_as_literal_characters(client):
     client.post("/api/leads", json={"name": "100% Growth"})
     results = client.get("/api/leads", params={"q": "%"}).json()
     assert [lead["name"] for lead in results] == ["100% Growth"]
+
+
+def test_failed_commit_rolls_back_both_note_and_follow_up(client, monkeypatch):
+    bootstrap(client)
+    lead_id = client.get("/api/leads").json()[0]["id"]
+    before = client.get(f"/api/leads/{lead_id}").json()
+
+    def fail_after_flush(session):
+        session.flush()
+        raise OperationalError("COMMIT", {}, Exception("Database unavailable"))
+
+    # Fail after the changes reach the transaction, rather than before any writes.
+    with monkeypatch.context() as patch:
+        patch.setattr(Session, "commit", fail_after_flush)
+        response = client.post(
+            f"/api/leads/{lead_id}/discussions",
+            json={
+                "content": "This write must be rolled back.",
+                "follow_up_at": "2027-01-10T14:30:00+05:30",
+            },
+        )
+        assert response.status_code == 503
+        assert "Please try again" in response.json()["detail"]
+
+    after = client.get(f"/api/leads/{lead_id}").json()
+    assert after["follow_up_at"] == before["follow_up_at"]
+    assert after["discussions"] == before["discussions"]
