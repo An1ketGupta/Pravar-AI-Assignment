@@ -24,7 +24,9 @@ export async function api<T>(
         Authorization: `Bearer ${token}`,
         ...init.headers,
       },
-      signal: init.signal ?? AbortSignal.timeout(70_000),
+      signal: init.signal
+        ? AbortSignal.any([init.signal, AbortSignal.timeout(70_000)])
+        : AbortSignal.timeout(70_000),
       cache: "no-store",
     });
   } catch {

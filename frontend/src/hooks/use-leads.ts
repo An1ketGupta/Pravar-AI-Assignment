@@ -2,6 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
+import { syncLeadCaches } from "@/lib/lead-cache";
 import type { Lead, LeadDetail, LeadStatus } from "@/lib/types";
 import { useAuth } from "@/components/providers";
 
@@ -21,7 +22,7 @@ export function useLeads() {
   });
   const leads = useQuery({
     queryKey: ["leads", userId],
-    queryFn: () => api<Lead[]>("/leads", token!),
+    queryFn: ({ signal }) => api<Lead[]>("/leads", token!, { signal }),
     enabled: Boolean(token) && bootstrap.isSuccess,
   });
   return {
@@ -36,7 +37,9 @@ export function useLead(id: string) {
   const { token, userId } = useAuth();
   return useQuery({
     queryKey: ["lead", userId, id],
-    queryFn: () => api<LeadDetail>(`/leads/${id}`, token!),
+    queryFn: ({ signal }) =>
+      api<LeadDetail>(`/leads/${id}`, token!, { signal }),
+    enabled: Boolean(token),
   });
 }
 
@@ -45,14 +48,7 @@ export function useLeadMutations() {
   const cache = useQueryClient();
 
   function syncLead(lead: LeadDetail) {
-    // Use the committed server response to update the list and dialog immediately.
-    cache.setQueryData(["lead", userId, lead.id], lead);
-    cache.setQueryData<Lead[]>(["leads", userId], (old = []) =>
-      [lead, ...old.filter((item) => item.id !== lead.id)].sort(
-        (a, b) =>
-          new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime(),
-      ),
-    );
+    return syncLeadCaches(cache, userId, lead);
   }
 
   const create = useMutation({
