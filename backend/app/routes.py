@@ -60,7 +60,13 @@ def list_leads(
     user_id: UUID = Depends(current_user),
     session: Session = Depends(get_session),
 ):
-    # A window query gets each latest note without one database request per lead.
+    filters = [Lead.owner_id == user_id]
+    if status is not None:
+        filters.append(Lead.status == status)
+    if q.strip():
+        filters.append(Lead.name.icontains(q.strip(), autoescape=True))
+
+    # Rank discussions only for matching owned leads, without a query per lead.
     latest = (
         select(
             Discussion.lead_id,
@@ -74,7 +80,7 @@ def list_leads(
             .label("position"),
         )
         .join(Lead, Lead.id == Discussion.lead_id)
-        .where(Lead.owner_id == user_id)
+        .where(*filters)
         .subquery()
     )
     statement = (
@@ -83,12 +89,8 @@ def list_leads(
             latest,
             (latest.c.lead_id == Lead.id) & (latest.c.position == 1),
         )
-        .where(Lead.owner_id == user_id)
+        .where(*filters)
     )
-    if status is not None:
-        statement = statement.where(Lead.status == status)
-    if q.strip():
-        statement = statement.where(Lead.name.icontains(q.strip(), autoescape=True))
     rows = session.exec(statement.order_by(Lead.updated_at.desc(), Lead.id.desc())).all()
     return [
         LeadRead(**lead.model_dump(), last_note=content, last_discussion_at=timestamp)

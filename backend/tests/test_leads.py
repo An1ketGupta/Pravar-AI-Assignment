@@ -138,6 +138,27 @@ def test_search_treats_wildcards_as_literal_characters(client):
     assert [lead["name"] for lead in results] == ["100% Growth"]
 
 
+def test_filtered_list_keeps_latest_note_and_excludes_other_accounts(client):
+    bootstrap(client)
+    lead = client.post("/api/leads", json={"name": "Matching lead"}).json()
+    lead_id = lead["id"]
+    client.patch(f"/api/leads/{lead_id}", json={"status": "qualified"})
+    for content in ("Earlier note", "Latest note"):
+        client.post(f"/api/leads/{lead_id}/discussions", json={"content": content})
+
+    other_user = {"X-Test-User": str(uuid4())}
+    bootstrap(client, other_user)
+    other = client.post("/api/leads", json={"name": "Matching lead"}, headers=other_user).json()
+    client.patch(
+        f"/api/leads/{other['id']}", json={"status": "qualified"}, headers=other_user
+    )
+
+    results = client.get("/api/leads", params={"q": " MATCHING ", "status": "qualified"}).json()
+    assert [item["id"] for item in results] == [lead_id]
+    assert results[0]["last_note"] == "Latest note"
+    assert client.get("/api/leads", params={"q": "Matching", "status": "won"}).json() == []
+
+
 def test_failed_commit_rolls_back_both_note_and_follow_up(client, monkeypatch):
     bootstrap(client)
     lead_id = client.get("/api/leads").json()[0]["id"]
