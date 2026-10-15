@@ -16,11 +16,11 @@ import {
   Users,
   X,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { useLeads } from "@/hooks/use-leads";
 import { ApiError } from "@/lib/api";
-import { groupLeads, isActive, isOverdue, isTodayFollowUp } from "@/lib/dates";
+import { groupLeads } from "@/lib/dates";
 import { STATUSES, STATUS_LABELS } from "@/lib/types";
 import { cn, initials } from "@/lib/utils";
 import { AddLeadDialog } from "./add-lead-dialog";
@@ -45,10 +45,11 @@ export function Dashboard() {
     return () => clearInterval(timer);
   }, []);
 
-  const groups = groupLeads(leads, search, status, now);
-  const activeCount = leads.filter(isActive).length;
-  const todayCount = leads.filter((lead) => isTodayFollowUp(lead, now)).length;
-  const overdueCount = leads.filter((lead) => isOverdue(lead, now)).length;
+  const groups = useMemo(
+    () => groupLeads(leads, search, status, now),
+    [leads, search, status, now],
+  );
+  const { activeCount, todayCount, overdueCount } = groups;
   const filtered = Boolean(search.trim()) || status !== "all";
 
   async function logout() {

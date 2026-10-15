@@ -72,4 +72,25 @@ describe("follow-ups in the user's timezone", () => {
       "valid follow-up",
     );
   });
+  it("keeps workspace totals independent of filters without reordering the input", () => {
+    const records = [
+      lead("tomorrow", "2030-05-08T08:00:00Z"),
+      lead("today", "2030-05-07T08:00:00Z", "qualified"),
+      lead("overdue", "2030-05-06T10:00:00Z"),
+      lead("closed", "2030-05-06T10:00:00Z", "lost"),
+    ];
+    const grouped = groupLeads(records, " TODAY ", "qualified", now);
+    expect(grouped.today.map((item) => item.id)).toEqual(["today"]);
+    expect(grouped.others).toEqual([]);
+    expect(grouped.count).toBe(1);
+    expect(grouped.activeCount).toBe(3);
+    expect(grouped.todayCount).toBe(1);
+    expect(grouped.overdueCount).toBe(1);
+    expect(records.map((item) => item.id)).toEqual([
+      "tomorrow",
+      "today",
+      "overdue",
+      "closed",
+    ]);
+  });
 });

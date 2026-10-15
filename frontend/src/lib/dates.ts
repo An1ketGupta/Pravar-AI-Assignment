@@ -50,29 +50,44 @@ export function groupLeads(
   status: string,
   now = new Date(),
 ) {
-  const matching = leads.filter(
-    (lead) =>
-      lead.name
-        .toLocaleLowerCase()
-        .includes(search.trim().toLocaleLowerCase()) &&
-      (status === "all" || lead.status === status),
+  const query = search.trim().toLocaleLowerCase();
+  const today: Lead[] = [];
+  const others: Lead[] = [];
+  let activeCount = 0;
+  let todayCount = 0;
+  let overdueCount = 0;
+
+  for (const lead of leads) {
+    const dueToday = isTodayFollowUp(lead, now);
+    activeCount += Number(isActive(lead));
+    todayCount += Number(dueToday);
+    overdueCount += Number(isOverdue(lead, now));
+    if (
+      (status === "all" || lead.status === status) &&
+      lead.name.toLocaleLowerCase().includes(query)
+    ) {
+      (dueToday ? today : others).push(lead);
+    }
+  }
+
+  today.sort(
+    (a, b) =>
+      new Date(a.follow_up_at!).getTime() - new Date(b.follow_up_at!).getTime(),
   );
-  const today = matching
-    .filter((lead) => isTodayFollowUp(lead, now))
-    .sort(
-      (a, b) =>
-        new Date(a.follow_up_at!).getTime() -
-        new Date(b.follow_up_at!).getTime(),
+  others.sort((a, b) => {
+    const overdueDifference =
+      Number(isOverdue(b, now)) - Number(isOverdue(a, now));
+    return (
+      overdueDifference ||
+      new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
     );
-  const others = matching
-    .filter((lead) => !isTodayFollowUp(lead, now))
-    .sort((a, b) => {
-      const overdueDifference =
-        Number(isOverdue(b, now)) - Number(isOverdue(a, now));
-      return (
-        overdueDifference ||
-        new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
-      );
-    });
-  return { today, others, count: matching.length };
+  });
+  return {
+    today,
+    others,
+    count: today.length + others.length,
+    activeCount,
+    todayCount,
+    overdueCount,
+  };
 }
