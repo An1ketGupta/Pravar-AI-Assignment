@@ -1,13 +1,8 @@
 import { test, expect } from "@playwright/test";
-import path from "node:path";
-import { mkdir } from "node:fs/promises";
-
-const screenshots = path.resolve(import.meta.dirname, "../../docs/screenshots");
 
 test("complete CRM flow, immediate updates, filters, persistence and mobile layout", async ({
   page,
-}) => {
-  await mkdir(screenshots, { recursive: true });
+}, testInfo) => {
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
   await page.goto("/");
@@ -15,7 +10,7 @@ test("complete CRM flow, immediate updates, filters, persistence and mobile layo
     page.getByRole("heading", { name: "Welcome back" }),
   ).toBeVisible();
   await page.screenshot({
-    path: path.join(screenshots, "01-sign-in.png"),
+    path: testInfo.outputPath("01-sign-in.png"),
     animations: "disabled",
     fullPage: true,
   });
@@ -35,7 +30,7 @@ test("complete CRM flow, immediate updates, filters, persistence and mobile layo
     page.getByRole("button", { name: "Open Bill Lumbergh" }),
   ).toContainText("Overdue");
   await page.screenshot({
-    path: path.join(screenshots, "02-dashboard.png"),
+    path: testInfo.outputPath("02-dashboard.png"),
     animations: "disabled",
     fullPage: true,
   });
@@ -54,7 +49,7 @@ test("complete CRM flow, immediate updates, filters, persistence and mobile layo
   await page.getByRole("button", { name: "Add new lead", exact: true }).click();
   await expect(page.getByRole("dialog")).toBeVisible();
   await page.screenshot({
-    path: path.join(screenshots, "03-add-lead.png"),
+    path: testInfo.outputPath("03-add-lead.png"),
     animations: "disabled",
     fullPage: false,
   });
@@ -77,7 +72,7 @@ test("complete CRM flow, immediate updates, filters, persistence and mobile layo
     "Sent pricing tier PDF",
   );
   await page.screenshot({
-    path: path.join(screenshots, "04-timeline.png"),
+    path: testInfo.outputPath("04-timeline.png"),
     animations: "disabled",
     fullPage: false,
   });
@@ -134,7 +129,7 @@ test("complete CRM flow, immediate updates, filters, persistence and mobile layo
     ),
   ).toBe(true);
   await page.screenshot({
-    path: path.join(screenshots, "05-mobile.png"),
+    path: testInfo.outputPath("05-mobile.png"),
     animations: "disabled",
     fullPage: true,
   });
@@ -145,7 +140,7 @@ test("complete CRM flow, immediate updates, filters, persistence and mobile layo
   await dialog.getByLabel("Set follow-up").check();
   await expect(dialog.getByRole("button", { name: "Save note" })).toBeVisible();
   await page.screenshot({
-    path: path.join(screenshots, "06-mobile-timeline.png"),
+    path: testInfo.outputPath("06-mobile-timeline.png"),
     animations: "disabled",
     fullPage: false,
   });

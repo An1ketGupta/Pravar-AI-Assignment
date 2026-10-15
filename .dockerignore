@@ -2,8 +2,9 @@
 node_modules
 frontend/node_modules
 frontend/.next
-backend/.venv
-backend/.local
+backend
+.local
+.github
 .env
 .env.*
 **/.env
@@ -12,5 +13,10 @@ backend/.local
 **/*.db
 **/test-results
 **/.pytest_cache
-docs/screenshots
+docs
+README.md
+**/.ruff_cache
+**/playwright-report
+**/*.tsbuildinfo
+**/*.log
 .cache

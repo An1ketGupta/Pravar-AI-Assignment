@@ -6,7 +6,6 @@ COPY pyproject.toml uv.lock ./
 RUN uv sync --locked --no-dev
 COPY app ./app
 COPY migrations ./migrations
-COPY scripts ./scripts
 COPY alembic.ini ./
 RUN useradd --create-home --uid 10001 leadflow && chown -R leadflow:leadflow /app
 USER leadflow

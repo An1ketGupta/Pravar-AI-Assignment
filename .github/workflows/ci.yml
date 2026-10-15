@@ -44,9 +44,7 @@ jobs:
         if: always()
         with:
           name: workflow-evidence
-          path: |
-            docs/screenshots
-            frontend/test-results
+          path: frontend/test-results
   postgres:
     runs-on: ubuntu-latest
     services:
